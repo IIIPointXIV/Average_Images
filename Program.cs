@@ -9,7 +9,8 @@ namespace Average_Images
         [STAThread]
         static void Main(string[] args)
         {
-            form.RunForm(args[0], (args.Count() > 1 ? bool.Parse(args[1]) : true));
+            //form.RunForm(args[0], (args.Count() > 1 ? bool.Parse(args[1]) : true));
+            form.RunForm(args);
         }
     }
 }

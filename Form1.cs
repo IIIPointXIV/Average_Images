@@ -2,19 +2,75 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Drawing.Imaging;
+using System.Drawing;
 public class Form1 : Form
 {
     List<DirectBitmap> images;
-    bool AvgOnlyExistingPixels = false;
+    bool avgOnlyExistingPixels = false;
+    bool resizeImages = false;
     Stopwatch time = new Stopwatch();
-
-    public void RunForm(string path, bool AvgOnlyExistingPixelsArg)
+    Dictionary<args, string> argDict = new Dictionary<args, string>();
+    int threadCount = 4;
+    enum args
     {
-       MakeAverageImg(path);
+        directoryOfImgs,
+        threads,
+        directoryOfFinishedImg,
+        resizeImags,
+        avgOnlyExistingPixels,
+    };
+
+    public void RunForm(string[] args)
+    {
+        if(args.Length == 0)
+        {
+            Console.WriteLine("No path of images given. Exiting.");
+            return;
+        }
+        ParseArgs(args);
+        MakeAverageImg(argDict[Form1.args.directoryOfImgs]);
     }
 
+    private void ParseArgs(string[] args)
+    {
+        argDict.Add(Form1.args.directoryOfImgs, null);
+        argDict.Add(Form1.args.threads, null);
+        argDict.Add(Form1.args.directoryOfFinishedImg, null);
+        argDict.Add(Form1.args.resizeImags, "false");
+        argDict.Add(Form1.args.avgOnlyExistingPixels, "false");
+
+        for(int i = 0; i < args.Length; i++)
+        {
+            if(args[i] == "-d" || args[i] == "-directory")
+                argDict[Form1.args.directoryOfImgs] = args[i+1];
+            else if(args[i] == "-t" || args[i] == "-threads")
+            {
+                argDict[Form1.args.threads] = args[i+1];
+                threadCount = int.Parse(args[i+1]);
+            }
+            else if(args[i] == "-o" || args[i] == "-output")
+                argDict[Form1.args.directoryOfFinishedImg] = args[i+1];
+            else if(args[i] == "-r" || args[i] == "-resize")
+            {
+                argDict[Form1.args.resizeImags] = "true";
+                resizeImages = true;
+            }
+            else if(args[i] == "-existing")
+            {
+                argDict[Form1.args.avgOnlyExistingPixels] = "true";
+                avgOnlyExistingPixels = true;
+            }
+        }
+
+        if(string.IsNullOrWhiteSpace(argDict[Form1.args.directoryOfFinishedImg]))
+        {
+            argDict[Form1.args.directoryOfFinishedImg] = Path.Combine(argDict[Form1.args.directoryOfImgs], "average-image.png");
+        }
+    }
+   
     private void MakeAverageImg(string givenPath)
     {
+        Console.WriteLine($"Using {threadCount} threads");
         time.Restart();
         Console.WriteLine("Discovering Images");
 
@@ -30,6 +86,13 @@ public class Form1 : Form
                 }
             }
         }
+
+        if(images.Count == 0)
+        {
+            Console.WriteLine("No valid imaged found in directory. Exiting");
+            return;
+        }
+
         Console.WriteLine("Found " + images.Count + " images");
         
         int maxHeight = 0;
@@ -39,19 +102,29 @@ public class Form1 : Form
             maxHeight = (maxHeight < curentImage.Height ? curentImage.Height : maxHeight);
             maxWidth = (maxWidth < curentImage.Width ? curentImage.Width : maxWidth);
         }
-        Console.WriteLine($"Images have a max height of {maxHeight} and a max width of {maxWidth}");
+        Console.WriteLine($"Images have a max height of {maxWidth} and a max width of {maxHeight}");
+
+        if(resizeImages)
+        {
+            Console.WriteLine($"Resizing images to {maxWidth}x{maxHeight}");
+            for(int i = 0; i < images.Count; i++)
+            {
+                images[i] = ResizeDirectBitmap(images[i], maxWidth, maxHeight);
+            }
+            Console.WriteLine("Finished resizing images");
+        }
 
         DirectBitmap finalImage = new DirectBitmap(maxWidth, maxHeight);
 
-        int threadsCount = 14;
         List<Task> threadList = new List<Task>();
-        int amount = (int)MathF.Floor(maxWidth/threadsCount);
-        int endingOffset = maxWidth - (amount*threadsCount);
+        int amount = (int)MathF.Floor(maxWidth/threadCount);
+        int endingOffset = maxWidth - (amount*threadCount);
 
-        for(int i = 0; i<threadsCount; i++)
+        Console.WriteLine("Averaging images");
+        for(int i = 0; i<threadCount; i++)
         {
             int startX = i*amount;
-            int endX = (i+1)*amount + ((i+1)==threadsCount ? endingOffset :0)-1;
+            int endX = (i+1)*amount + ((i+1)==threadCount ? endingOffset :0)-1;
             threadList.Add(Task.Factory.StartNew(()=>RunByThread(finalImage, startX, endX)));
         }
         Task.WaitAll(threadList.ToArray());
@@ -59,9 +132,9 @@ public class Form1 : Form
         foreach(Task thread in threadList)
             thread.Dispose();
 
-        finalImage.Bitmap.Save(Path.Combine(givenPath, "final_image.png"));
+        finalImage.Bitmap.Save(argDict[Form1.args.directoryOfFinishedImg]);
         finalImage.Dispose();
-        Console.WriteLine("Done. Made image \"final_image.png\"");
+        Console.WriteLine($"Finished. Saved image to {argDict[Form1.args.directoryOfFinishedImg]}");
         Console.WriteLine($"Took {time.ElapsedMilliseconds}ms to run");
     }
 
@@ -108,14 +181,14 @@ public class Form1 : Form
 
             if(image.Height < dy+1 || image.Width < dx+1 || dx<0 || dy<0)
             {
-                countOffset += AvgOnlyExistingPixels ? 1 : 0; //if image does not have pixel at that point, do not add it
+                countOffset += avgOnlyExistingPixels ? 1 : 0; //if image does not have pixel at that point, do not add it
                 continue;
             }
             thisColor = image.GetPixel(dx, dy);
 
             if(thisColor.A == 0)
             {
-                countOffset += AvgOnlyExistingPixels ? 1 : 0; 
+                countOffset += avgOnlyExistingPixels ? 1 : 0; 
                 continue;
             }
             colorA += thisColor.A;
@@ -126,6 +199,32 @@ public class Form1 : Form
         int divisor = images.Count()==countOffset ? 1 : images.Count()-countOffset; //make sure to not divide by zero
 
         return Color.FromArgb(colorA/divisor, colorR/divisor, colorG/divisor, colorB/divisor);
+    }
+
+    private DirectBitmap ResizeDirectBitmap(DirectBitmap image, int width, int height)
+    {
+        var destRect = new Rectangle(0, 0, width, height);
+        var destImage = new Bitmap(width, height);
+
+        destImage.SetResolution(image.Bitmap.HorizontalResolution, image.Bitmap.VerticalResolution);
+
+        using (var graphics = Graphics.FromImage(destImage))
+        {
+            //graphics.CompositingMode = CompositingMode.SourceCopy;
+            graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+
+            using (var wrapMode = new ImageAttributes())
+            {
+                wrapMode.SetWrapMode(System.Drawing.Drawing2D.WrapMode.TileFlipXY);
+                graphics.DrawImage(image.Bitmap, destRect, 0, 0, image.Width,image.Height, GraphicsUnit.Pixel, wrapMode);
+            }
+        }
+        image.Dispose();
+        return ConvertToDirectBitmap(destImage);
     }
 }
 
