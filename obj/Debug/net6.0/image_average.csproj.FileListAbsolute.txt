@@ -1,0 +1,5 @@
+F:\Code\image_average\obj\Debug\net6.0\image_average.csproj.AssemblyReference.cache
+F:\Code\image_average\obj\Debug\net6.0\image_average.GeneratedMSBuildEditorConfig.editorconfig
+F:\Code\image_average\obj\Debug\net6.0\image_average.AssemblyInfoInputs.cache
+F:\Code\image_average\obj\Debug\net6.0\image_average.AssemblyInfo.cs
+F:\Code\image_average\obj\Debug\net6.0\image_average.csproj.CoreCompileInputs.cache

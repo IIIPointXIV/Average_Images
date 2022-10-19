@@ -1,0 +1,15 @@
+C:\Users\zbeyer\Documents\GitHub\Average_Images\bin\Debug\net6.0-windows\Average_Images.exe
+C:\Users\zbeyer\Documents\GitHub\Average_Images\bin\Debug\net6.0-windows\Average_Images.deps.json
+C:\Users\zbeyer\Documents\GitHub\Average_Images\bin\Debug\net6.0-windows\Average_Images.runtimeconfig.json
+C:\Users\zbeyer\Documents\GitHub\Average_Images\bin\Debug\net6.0-windows\Average_Images.dll
+C:\Users\zbeyer\Documents\GitHub\Average_Images\bin\Debug\net6.0-windows\Average_Images.pdb
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\Average_Images.csproj.AssemblyReference.cache
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\Average_Images.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\Average_Images.AssemblyInfoInputs.cache
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\Average_Images.AssemblyInfo.cs
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\Average_Images.csproj.CoreCompileInputs.cache
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\Average_Images.dll
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\refint\Average_Images.dll
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\Average_Images.pdb
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\Average_Images.genruntimeconfig.cache
+C:\Users\zbeyer\Documents\GitHub\Average_Images\obj\Debug\net6.0-windows\ref\Average_Images.dll
