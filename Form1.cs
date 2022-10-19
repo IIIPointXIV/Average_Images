@@ -1,16 +1,12 @@
-using System.Net.Mime;
-using System.Security.AccessControl;
-using System.Reflection;
-using System.Linq;
 using System.Diagnostics;
 using System.IO;
-using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 using System.Drawing.Imaging;
 public class Form1 : Form
 {
     List<DirectBitmap> images;
     bool AvgOnlyExistingPixels = false;
+    Stopwatch time = new Stopwatch();
 
     public void RunForm(string path, bool AvgOnlyExistingPixelsArg)
     {
@@ -19,6 +15,8 @@ public class Form1 : Form
 
     private void MakeAverageImg(string givenPath)
     {
+        time.Restart();
+        Console.WriteLine("Discovering Images");
         images = new List<DirectBitmap>();
         DirectoryInfo di = new DirectoryInfo(givenPath);
         foreach (FileInfo file in di.GetFiles())
@@ -31,6 +29,7 @@ public class Form1 : Form
                 }
             }
         }
+        Console.WriteLine("Found " + images.Count + " images");
         
         int maxHeight = 0;
         int maxWidth = 0;
@@ -39,6 +38,7 @@ public class Form1 : Form
             maxHeight = (maxHeight < thisImage.Height ? thisImage.Height : maxHeight);
             maxWidth = (maxWidth < thisImage.Width ? thisImage.Width : maxWidth);
         }
+        Console.WriteLine($"Images have a max height of {maxHeight} and a max width of {maxWidth}");
 
         DirectBitmap finalImage = new DirectBitmap(maxWidth, maxHeight);
         int threadsCount = 14;
@@ -59,7 +59,8 @@ public class Form1 : Form
 
         finalImage.Bitmap.Save(Path.Combine(givenPath, "final_image.png"));
         finalImage.Dispose();
-        Console.WriteLine("done");
+        Console.WriteLine("Done. Made image \"final_image.png\"");
+        Console.WriteLine($"Took {Math.Round(time.ElapsedMilliseconds/1000.0f)} seconds to run");
     }
 
     private DirectBitmap ConvertToDirectBitmap(Image image)
