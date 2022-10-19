@@ -17,6 +17,7 @@ public class Form1 : Form
     {
         time.Restart();
         Console.WriteLine("Discovering Images");
+
         images = new List<DirectBitmap>();
         DirectoryInfo di = new DirectoryInfo(givenPath);
         foreach (FileInfo file in di.GetFiles())
@@ -33,14 +34,15 @@ public class Form1 : Form
         
         int maxHeight = 0;
         int maxWidth = 0;
-        foreach(DirectBitmap thisImage in images)
+        foreach(DirectBitmap curentImage in images)
         {
-            maxHeight = (maxHeight < thisImage.Height ? thisImage.Height : maxHeight);
-            maxWidth = (maxWidth < thisImage.Width ? thisImage.Width : maxWidth);
+            maxHeight = (maxHeight < curentImage.Height ? curentImage.Height : maxHeight);
+            maxWidth = (maxWidth < curentImage.Width ? curentImage.Width : maxWidth);
         }
         Console.WriteLine($"Images have a max height of {maxHeight} and a max width of {maxWidth}");
 
         DirectBitmap finalImage = new DirectBitmap(maxWidth, maxHeight);
+
         int threadsCount = 14;
         List<Task> threadList = new List<Task>();
         int amount = (int)MathF.Floor(maxWidth/threadsCount);
@@ -60,19 +62,19 @@ public class Form1 : Form
         finalImage.Bitmap.Save(Path.Combine(givenPath, "final_image.png"));
         finalImage.Dispose();
         Console.WriteLine("Done. Made image \"final_image.png\"");
-        Console.WriteLine($"Took {Math.Round(time.ElapsedMilliseconds/1000.0f)} seconds to run");
+        Console.WriteLine($"Took {time.ElapsedMilliseconds}ms to run");
     }
 
-    private DirectBitmap ConvertToDirectBitmap(Image image)
+    private DirectBitmap ConvertToDirectBitmap(Image toConvertImage)
     {
-        DirectBitmap temp = new DirectBitmap(image.Width, image.Height);
-        Rectangle thing = new Rectangle(0, 0, image.Width, image.Height);
+        DirectBitmap directBitmap = new DirectBitmap(toConvertImage.Width, toConvertImage.Height);
+        Rectangle rectSize = new Rectangle(0, 0, toConvertImage.Width, toConvertImage.Height);
 
-        using(Graphics graph = Graphics.FromImage(temp.Bitmap))
-            graph.DrawImage(image, thing);
+        using(Graphics graph = Graphics.FromImage(directBitmap.Bitmap))
+            graph.DrawImage(toConvertImage, rectSize);
         
-        image.Dispose();
-        return temp;
+        toConvertImage.Dispose();
+        return directBitmap;
     }
 
     private void RunByThread(DirectBitmap finalImage, int startX, int endX)
@@ -88,8 +90,8 @@ public class Form1 : Form
 
     private Color GetColorAverage(int dx, int dy)
     {
-        int origDX = dx;
-        int origDY = dy;
+        //int origDX = dx;
+        //int origDY = dy;
         int countOffset = 0;
         int colorA=0;
         int colorR=0;
@@ -97,19 +99,19 @@ public class Form1 : Form
         int colorB=0;
         
         Color thisColor;
-        int count = images.Count();
-        for(int thisImageIndex = 0; thisImageIndex<count; thisImageIndex++)
+        int imagesCount = images.Count();
+        for(int thisImageIndex = 0; thisImageIndex < imagesCount; thisImageIndex++)
         {
             DirectBitmap image = images[thisImageIndex];
-            dx = origDX;
-            dy = origDY;
+            //dx = origDX;
+            //dy = origDY;
 
-            if(dx<0||dy<0 || image.Height < dy+1 || image.Width < dx+1)
+            if(image.Height < dy+1 || image.Width < dx+1 || dx<0 || dy<0)
             {
-                countOffset += AvgOnlyExistingPixels ? 1 : 0; 
+                countOffset += AvgOnlyExistingPixels ? 1 : 0; //if image does not have pixel at that point, do not add it
                 continue;
             }
-            thisColor = image.GetPixel(dx, dy); 
+            thisColor = image.GetPixel(dx, dy);
 
             if(thisColor.A == 0)
             {
@@ -121,7 +123,7 @@ public class Form1 : Form
             colorG += thisColor.G;
             colorB += thisColor.B;
         }
-        int divisor = images.Count()==countOffset ? 1 : images.Count()-countOffset;
+        int divisor = images.Count()==countOffset ? 1 : images.Count()-countOffset; //make sure to not divide by zero
 
         return Color.FromArgb(colorA/divisor, colorR/divisor, colorG/divisor, colorB/divisor);
     }
