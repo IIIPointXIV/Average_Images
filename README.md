@@ -5,11 +5,12 @@ This project allows you to take a directory of images and average them together.
 - Average images
 
 # How To Use
-1. Download exe from the latest [release](https://github.com/IIIPointXIV/Average_Images/releases).
-2. Open command prompt where the exe is.
-3. Run Average_Images.exe -d "Directory where your images are"
-4. Wait!
-5. The averaged image should be put in the directory provided with the name average-image.png (If you did not change it)
+1. Download zip from the latest [release](https://github.com/IIIPointXIV/Average_Images/releases).
+2. Extract files.
+3. Open command prompt where the exe is.
+4. Run Average_Images.exe -d "Directory where your images are"
+5. Wait!
+6. The averaged image should be put in the directory provided with the name average-image.png (If you did not change it)
 
 # Command Line Arguments
 | Command | Description | Example |
