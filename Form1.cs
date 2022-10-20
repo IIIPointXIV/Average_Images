@@ -117,14 +117,14 @@ public class Form1 : Form
         DirectBitmap finalImage = new DirectBitmap(maxWidth, maxHeight);
 
         List<Task> threadList = new List<Task>();
-        int amount = (int)MathF.Floor(maxWidth/threadCount);
-        int endingOffset = maxWidth - (amount*threadCount);
+        int pixelsPerThread = (int)MathF.Floor(maxWidth/threadCount);
+        int endingPixelOffset = maxWidth - (pixelsPerThread*threadCount);
 
         Console.WriteLine("Averaging images");
-        for(int i = 0; i<threadCount; i++)
+        for(int i = 0; i < threadCount; i++)
         {
-            int startX = i*amount;
-            int endX = (i+1)*amount + ((i+1)==threadCount ? endingOffset :0)-1;
+            int startX = i*pixelsPerThread;
+            int endX = (i+1)*pixelsPerThread + ((i+1)==threadCount ? endingPixelOffset :0)-1;
             threadList.Add(Task.Factory.StartNew(()=>RunByThread(finalImage, startX, endX)));
         }
         Task.WaitAll(threadList.ToArray());
@@ -133,9 +133,13 @@ public class Form1 : Form
             thread.Dispose();
 
         finalImage.Bitmap.Save(argDict[Form1.args.directoryOfFinishedImg]);
-        finalImage.Dispose();
+
         Console.WriteLine($"Finished. Saved image to {argDict[Form1.args.directoryOfFinishedImg]}");
         Console.WriteLine($"Took {timeElapsed.ElapsedMilliseconds}ms to run");
+
+        finalImage.Dispose();
+        foreach(DirectBitmap image in imageList)
+            image.Dispose();
     }
 
     private DirectBitmap ConvertToDirectBitmap(Image toConvertImage)
@@ -161,30 +165,30 @@ public class Form1 : Form
         }
     }
 
-    private Color GetColorAverage(int dx, int dy)
+    private Color GetColorAverage(int x, int y)
     {
         //int origDX = dx;
         //int origDY = dy;
         int countOffset = 0;
-        int colorA=0;
-        int colorR=0;
-        int colorG=0;
-        int colorB=0;
+        int colorA = 0;
+        int colorR = 0;
+        int colorG = 0;
+        int colorB = 0;
         
         Color thisColor;
         int imagesCount = imageList.Count();
         for(int thisImageIndex = 0; thisImageIndex < imagesCount; thisImageIndex++)
         {
-            DirectBitmap image = imageList[thisImageIndex];
+            DirectBitmap currentImage = imageList[thisImageIndex];
             //dx = origDX;
             //dy = origDY;
 
-            if(image.Height < dy+1 || image.Width < dx+1 || dx<0 || dy<0)
+            if(currentImage.Height < y+1 || currentImage.Width < x+1 || x<0 || y<0)
             {
                 countOffset += avgOnlyExistingPixels ? 1 : 0; //if image does not have pixel at that point, do not add it
                 continue;
             }
-            thisColor = image.GetPixel(dx, dy);
+            thisColor = currentImage.GetPixel(x, y);
 
             if(thisColor.A == 0)
             {
@@ -196,7 +200,7 @@ public class Form1 : Form
             colorG += thisColor.G;
             colorB += thisColor.B;
         }
-        int divisor = imageList.Count()==countOffset ? 1 : imageList.Count()-countOffset; //make sure to not divide by zero
+        int divisor = imageList.Count() == countOffset ? 1 : imageList.Count() - countOffset; //make sure to not divide by zero
 
         return Color.FromArgb(colorA/divisor, colorR/divisor, colorG/divisor, colorB/divisor);
     }
@@ -224,7 +228,9 @@ public class Form1 : Form
             }
         }
         image.Dispose();
-        return ConvertToDirectBitmap(destImage);
+        DirectBitmap returnedImage =  ConvertToDirectBitmap(destImage);
+        destImage.Dispose();
+        return returnedImage;
     }
 }
 
